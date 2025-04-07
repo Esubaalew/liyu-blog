@@ -1,0 +1,11 @@
+{% if tags %}
+<div class="tags-cloud">
+    {% for tag in tags %}
+        <a href="{% url 'blog:tagged_posts' tag.slug %}" class="tag-badge">
+            {{ tag.name }} {% if tag.num_posts %}({{ tag.num_posts }}){% endif %}
+        </a>
+    {% endfor %}
+</div>
+{% else %}
+<p>No tags available yet.</p>
+{% endif %}

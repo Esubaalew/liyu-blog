@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home - {{ site_title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Hero Section -->
+            <section class="hero-section mb-5">
+                <div class="card border-0 bg-primary text-white">
+                    <div class="card-body p-5">
+                        <h1 class="display-4 fw-bold mb-4">{{ site_title }}</h1>
+                        <p class="lead">{{ site_description }}</p>
+                        <p>A passionate Fullstack Developer with expertise spanning from C to modern languages like JavaScript and Python.</p>
+                        <a href="{% url 'blog:post_list' %}" class="btn btn-light btn-lg mt-3">
+                            <i class="fas fa-book me-2"></i>Read Blog
+                        </a>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Featured Posts -->
+            <section class="featured-posts mb-5">
+                <h2 class="section-title mb-4">Featured Posts</h2>
+                <div class="row">
+                    {% for post in featured_posts %}
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 post-card animate-on-scroll">
+                                {% if post.featured_image %}
+                                    <img src="{{ post.featured_image.url }}" class="card-img-top" alt="{{ post.title }}">
+                                {% else %}
+                                    <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center text-white">
+                                        <i class="fas fa-file-alt fa-3x"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="card-body">
+                                    <div class="post-meta mb-2">
+                                        <span><i class="far fa-calendar-alt me-1"></i>{{ post.published_at|date:"M d, Y" }}</span>
+                                        <span class="ms-3"><i class="far fa-eye me-1"></i>{{ post.views }} views</span>
+                                    </div>
+                                    <h5 class="card-title">{{ post.title }}</h5>
+                                    <p class="card-text">{{ post.content|truncatewords:20 }}</p>
+                                </div>
+                                <div class="card-footer bg-transparent border-top-0">
+                                    <a href="{{ post.get_absolute_url }}" class="btn btn-outline-primary">Read More</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                No featured posts available yet. Check back soon!
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+            
+            <!-- Recent Gallery -->
+            <section class="recent-gallery mb-5">
+                <h2 class="section-title mb-4">Recent Gallery</h2>
+                <div class="gallery-grid">
+                    {% for item in gallery_items %}
+                        <div class="gallery-item animate-on-scroll">
+                            <img src="{{ item.file.url }}" alt="{{ item.title }}">
+                            <div class="gallery-item-overlay">
+                                <h5>{{ item.title }}</h5>
+                                <p class="small">{{ item.description|truncatechars:50 }}</p>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                No gallery items available yet. Check back soon!
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="text-center mt-4">
+                    <a href="{% url 'blog:gallery_list' %}" class="btn btn-outline-primary">View All Galleries</a>
+                </div>
+            </section>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- About Author -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">About the Author</h5>
+                </div>
+                <div class="card-body text-center">
+                    <img src="{% static 'img/author.jpg' %}" alt="Esubalew Chekol" class="avatar-lg mb-3">
+                    <h4>Esubalew Chekol</h4>
+                    <p class="text-muted">Fullstack Developer</p>
+                    <p>A passionate Fullstack Developer with expertise in web applications, Telegram bots, and mobile applications.</p>
+                    <p>Graduated with a BSc in Information Systems from Addis Ababa University in July 2024. Currently pursuing MSc in Artificial Intelligence at the Addis Ababa Institute of Technology.</p>
+                    <a href="https://esubalew.et" target="_blank" class="btn btn-outline-primary">
+                        <i class="fas fa-globe me-2"></i>Personal Website
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Popular Tags -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Popular Tags</h5>
+                </div>
+                <div class="card-body">
+                    <div class="tags-cloud">
+                        {% for tag in popular_tags %}
+                            <a href="{% url 'blog:tagged_posts' tag.slug %}" class="tag-badge">
+                                {{ tag.name }} ({{ tag.num_posts }})
+                            </a>
+                        {% empty %}
+                            <p>No tags available yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Posts -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Recent Posts</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for post in recent_posts %}
+                            <li class="list-group-item bg-transparent">
+                                <a href="{{ post.get_absolute_url }}" class="text-decoration-none">
+                                    {{ post.title }}
+                                </a>
+                                <div class="small text-muted">
+                                    {{ post.published_at|date:"M d, Y" }}
+                                </div>
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item bg-transparent">No recent posts available.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

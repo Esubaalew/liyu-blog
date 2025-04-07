@@ -1,0 +1,331 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ post.title }} - {{ site_title }}{% endblock %}
+{% block meta_description %}{{ post.content|truncatewords:30 }}{% endblock %}
+
+{% block og_title %}{{ post.title }}{% endblock %}
+{% block og_description %}{{ post.content|truncatewords:30 }}{% endblock %}
+{% block og_type %}article{% endblock %}
+{% if post.featured_image %}
+    {% block og_image %}{{ request.scheme }}://{{ request.get_host }}{{ post.featured_image.url }}{% endblock %}
+{% endif %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Post Content -->
+            <article class="post-detail mb-5">
+                <header class="post-header mb-4">
+                    <h1 class="display-4 fw-bold mb-3">{{ post.title }}</h1>
+                    <div class="post-meta d-flex align-items-center mb-4">
+                        <div class="author-info d-flex align-items-center me-4">
+                            {% if post.author.profile.profile_image %}
+                                <img src="{{ post.author.profile.profile_image.url }}" alt="{{ post.author.username }}" class="avatar-sm me-2">
+                            {% else %}
+                                <i class="fas fa-user-circle me-2"></i>
+                            {% endif %}
+                            <span>By <a href="{% url 'blog:author_posts' post.author.username %}">{{ post.author.get_full_name|default:post.author.username }}</a></span>
+                        </div>
+                        <div class="post-date me-4">
+                            <i class="far fa-calendar-alt me-1"></i>
+                            <span>{{ post.published_at|date:"F d, Y" }}</span>
+                        </div>
+                        <div class="post-views">
+                            <i class="far fa-eye me-1"></i>
+                            <span>{{ post.views }} views</span>
+                        </div>
+                    </div>
+                    <div class="post-tags mb-4">
+                        {% for tag in post.tags.all %}
+                            <a href="{% url 'blog:tagged_posts' tag.slug %}" class="tag-badge">
+                                <i class="fas fa-tag me-1"></i>{{ tag.name }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </header>
+                
+                {% if post.featured_image %}
+                    <div class="post-featured-image mb-4">
+                        <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" class="img-fluid rounded">
+                    </div>
+                {% endif %}
+                
+                <div class="post-content">
+                    {{ post.formatted_markdown|safe }}
+                </div>
+                
+                <footer class="post-footer mt-5">
+                    <div class="post-share d-flex align-items-center justify-content-between">
+                        <div class="post-version">
+                            <small class="text-muted">Version: {{ post.version }}</small>
+                            {% if post.previous_version %}
+                                <a href="{{ post.previous_version.get_absolute_url }}" class="btn btn-sm btn-outline-secondary ms-2">
+                                    <i class="fas fa-history me-1"></i>Previous Version
+                                </a>
+                            {% endif %}
+                        </div>
+                        <div class="social-share">
+                            <span class="me-2">Share:</span>
+                            <a href="https://twitter.com/intent/tweet?url={{ request.build_absolute_uri }}&text={{ post.title }}" target="_blank" class="btn btn-sm btn-outline-primary me-1">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}" target="_blank" class="btn btn-sm btn-outline-primary me-1">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                            <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ request.build_absolute_uri }}&title={{ post.title }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="fab fa-linkedin-in"></i>
+                            </a>
+                        </div>
+                    </div>
+                </footer>
+            </article>
+            
+            <!-- Related Posts -->
+            {% if related_posts %}
+                <section class="related-posts mb-5">
+                    <h3 class="section-title mb-4">Related Posts</h3>
+                    <div class="row">
+                        {% for related_post in related_posts %}
+                            <div class="col-md-4 mb-4">
+                                <div class="card h-100 post-card">
+                                    {% if related_post.featured_image %}
+                                        <img src="{{ related_post.featured_image.url }}" class="card-img-top" alt="{{ related_post.title }}">
+                                    {% else %}
+                                        <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center text-white" style="height: 120px;">
+                                            <i class="fas fa-file-alt fa-2x"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ related_post.title }}</h5>
+                                        <p class="card-text small">{{ related_post.content|truncatewords:10 }}</p>
+                                    </div>
+                                    <div class="card-footer bg-transparent border-top-0">
+                                        <a href="{{ related_post.get_absolute_url }}" class="btn btn-sm btn-outline-primary">Read More</a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endif %}
+            
+            <!-- Comments Section -->
+            <section class="comment-section" id="comments">
+                <h3 class="section-title mb-4">Comments ({{ comments.count }})</h3>
+                
+                {% if user.is_authenticated %}
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Leave a Comment</h5>
+                            <form action="{% url 'blog:add_comment' %}" method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="post_id" value="{{ post.id }}">
+                                <div class="mb-3">
+                                    <textarea name="content" class="form-control" rows="3" placeholder="Write your comment here..." required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Submit Comment</button>
+                            </form>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info mb-4">
+                        Please <a href="{% url 'account_login' %}?next={{ request.path }}">login</a> to leave a comment.
+                    </div>
+                {% endif %}
+                
+                <!-- Comments List -->
+                <div class="comments-list">
+                    {% for comment in comments %}
+                        <div class="comment" id="comment-{{ comment.id }}">
+                            <div class="d-flex">
+                                {% if comment.author.profile.profile_image %}
+                                    <img src="{{ comment.author.profile.profile_image.url }}" alt="{{ comment.author.username }}" class="avatar-md me-3">
+                                {% else %}
+                                    <div class="avatar-md me-3 bg-secondary text-white d-flex align-items-center justify-content-center rounded-circle">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="flex-grow-1">
+                                    <div class="comment-meta">
+                                        <h5 class="mb-1">{{ comment.author.get_full_name|default:comment.author.username }}</h5>
+                                        <p class="text-muted small mb-2">{{ comment.created_at|date:"F d, Y \a\t H:i" }}</p>
+                                    </div>
+                                    <div class="comment-content mb-3">
+                                        {{ comment.content|linebreaks }}
+                                    </div>
+                                    <div class="comment-actions d-flex align-items-center">
+                                        {% if user.is_authenticated %}
+                                            <button class="btn btn-sm btn-outline-secondary me-3 reply-btn" data-comment-id="{{ comment.id }}">
+                                                <i class="fas fa-reply me-1"></i>Reply
+                                            </button>
+                                            <div class="comment-reactions">
+                                                <button class="reaction-btn {% if user in comment.reactions.filter(reaction_type='like').values_list('user', flat=True) %}active{% endif %}" data-comment-id="{{ comment.id }}" data-reaction-type="like">
+                                                    ❤️ <span class="reaction-count">{{ comment.reactions.filter(reaction_type='like').count }}</span>
+                                                </button>
+                                                <button class="reaction-btn {% if user in comment.reactions.filter(reaction_type='fire').values_list('user', flat=True) %}active{% endif %}" data-comment-id="{{ comment.id }}" data-reaction-type="fire">
+                                                    🔥 <span class="reaction-count">{{ comment.reactions.filter(reaction_type='fire').count }}</span>
+                                                </button>
+                                                <button class="reaction-btn {% if user in comment.reactions.filter(reaction_type='idea').values_list('user', flat=True) %}active{% endif %}" data-comment-id="{{ comment.id }}" data-reaction-type="idea">
+                                                    💡 <span class="reaction-count">{{ comment.reactions.filter(reaction_type='idea').count }}</span>
+                                                </button>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- Reply Form (hidden by default) -->
+                                    <div class="reply-form mt-3" id="reply-form-{{ comment.id }}" style="display: none;">
+                                        <form action="{% url 'blog:add_reply' %}" method="post">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="post_id" value="{{ post.id }}">
+                                            <input type="hidden" name="parent_id" value="{{ comment.id }}">
+                                            <div class="mb-3">
+                                                <textarea name="content" class="form-control" rows="2" placeholder="Write your reply here..." required></textarea>
+                                            </div>
+                                            <button type="submit" class="btn btn-sm btn-primary">Submit Reply</button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary ms-2 cancel-reply" data-comment-id="{{ comment.id }}">Cancel</button>
+                                        </form>
+                                    </div>
+                                    
+                                    <!-- Replies -->
+                                    {% if comment.get_replies %}
+                                        <div class="comment-replies mt-4">
+                                            {% for reply in comment.get_replies %}
+                                                <div class="comment" id="comment-{{ reply.id }}">
+                                                    <div class="d-flex">
+                                                        {% if reply.author.profile.profile_image %}
+                                                            <img src="{{ reply.author.profile.profile_image.url }}" alt="{{ reply.author.username }}" class="avatar-sm me-2">
+                                                        {% else %}
+                                                            <div class="avatar-sm me-2 bg-secondary text-white d-flex align-items-center justify-content-center rounded-circle">
+                                                                <i class="fas fa-user"></i>
+                                                            </div>
+                                                        {% endif %}
+                                                        <div class="flex-grow-1">
+                                                            <div class="comment-meta">
+                                                                <h6 class="mb-1">{{ reply.author.get_full_name|default:reply.author.username }}</h6>
+                                                                <p class="text-muted small mb-2">{{ reply.created_at|date:"F d, Y \a\t H:i" }}</p>
+                                                            </div>
+                                                            <div class="comment-content mb-2">
+                                                                {{ reply.content|linebreaks }}
+                                                            </div>
+                                                            <div class="comment-reactions">
+                                                                {% if user.is_authenticated %}
+                                                                    <button class="reaction-btn {% if user in reply.reactions.filter(reaction_type='like').values_list('user', flat=True) %}active{% endif %}" data-comment-id="{{ reply.id }}" data-reaction-type="like">
+                                                                        ❤️ <span class="reaction-count">{{ reply.reactions.filter(reaction_type='like').count }}</span>
+                                                                    </button>
+                                                                    <button class="reaction-btn {% if user in reply.reactions.filter(reaction_type='fire').values_list('user', flat=True) %}active{% endif %}" data-comment-id="{{ reply.id }}" data-reaction-type="fire">
+                                                                        🔥 <span class="reaction-count">{{ reply.reactions.filter(reaction_type='fire').count }}</span>
+                                                                    </button>
+                                                                    <button class="reaction-btn {% if user in reply.reactions.filter(reaction_type='idea').values_list('user', flat=True) %}active{% endif %}" data-comment-id="{{ reply.id }}" data-reaction-type="idea">
+                                                                        💡 <span class="reaction-count">{{ reply.reactions.filter(reaction_type='idea').count }}</span>
+                                                                    </button>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="alert alert-light">
+                            No comments yet. Be the first to comment!
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Author Info -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">About the Author</h5>
+                </div>
+                <div class="card-body text-center">
+                    {% if post.author.profile.profile_image %}
+                        <img src="{{ post.author.profile.profile_image.url }}" alt="{{ post.author.username }}" class="avatar-lg mb-3">
+                    {% else %}
+                        <div class="avatar-lg mx-auto mb-3 bg-secondary text-white d-flex align-items-center justify-content-center rounded-circle">
+                            <i class="fas fa-user fa-3x"></i>
+                        </div>
+                    {% endif %}
+                    <h4>{{ post.author.get_full_name|default:post.author.username }}</h4>
+                    <p class="text-muted">{{ post.author.profile.bio|truncatewords:10 }}</p>
+                    <a href="{% url 'blog:author_posts' post.author.username %}" class="btn btn-outline-primary">
+                        <i class="fas fa-book me-2"></i>View All Posts
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Popular Tags -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Popular Tags</h5>
+                </div>
+                <div class="card-body">
+                    <div class="tags-cloud">
+                        {% for tag in popular_tags %}
+                            <a href="{% url 'blog:tagged_posts' tag.slug %}" class="tag-badge">
+                                {{ tag.name }} ({{ tag.num_posts }})
+                            </a>
+                        {% empty %}
+                            <p>No tags available yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Posts -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Recent Posts</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for recent_post in recent_posts %}
+                            <li class="list-group-item bg-transparent">
+                                <a href="{{ recent_post.get_absolute_url }}" class="text-decoration-none">
+                                    {{ recent_post.title }}
+                                </a>
+                                <div class="small text-muted">
+                                    {{ recent_post.published_at|date:"M d, Y" }}
+                                </div>
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item bg-transparent">No recent posts available.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Reply functionality
+        document.querySelectorAll('.reply-btn').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const commentId = this.dataset.commentId;
+                const replyForm = document.getElementById('reply-form-' + commentId);
+                replyForm.style.display = 'block';
+            });
+        });
+        
+        document.querySelectorAll('.cancel-reply').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const commentId = this.dataset.commentId;
+                const replyForm = document.getElementById('reply-form-' + commentId);
+                replyForm.style.display = 'none';
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    restart: always
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    env_file:
+      - .env
+    depends_on:
+      - db
+    networks:
+      - liyu_network
+
+  db:
+    image: postgres:14
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - .env
+    networks:
+      - liyu_network
+
+  nginx:
+    image: nginx:latest
+    restart: always
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    ports:
+      - "80:80"
+    depends_on:
+      - web
+    networks:
+      - liyu_network
+
+networks:
+  liyu_network:
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:

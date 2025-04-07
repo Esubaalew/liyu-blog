@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profile - {{ profile_user.username }} - {{ site_title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Profile Header -->
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <div class="profile-header">
+                        {% if profile.profile_image %}
+                            <img src="{{ profile.profile_image.url }}" alt="{{ profile_user.username }}" class="avatar-lg mb-3">
+                        {% else %}
+                            <div class="avatar-lg mx-auto mb-3 bg-secondary text-white d-flex align-items-center justify-content-center rounded-circle">
+                                <i class="fas fa-user fa-3x"></i>
+                            </div>
+                        {% endif %}
+                        <h2 class="mb-1">{{ profile_user.get_full_name|default:profile_user.username }}</h2>
+                        <p class="text-muted">Member since {{ profile_user.date_joined|date:"F Y" }}</p>
+                        
+                        {% if profile.bio %}
+                            <div class="bio mt-3">
+                                <p>{{ profile.bio }}</p>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="social-links mt-3">
+                            {% if profile.website %}
+                                <a href="{{ profile.website }}" target="_blank" class="btn btn-outline-primary btn-sm me-2">
+                                    <i class="fas fa-globe me-1"></i>Website
+                                </a>
+                            {% endif %}
+                            {% if profile.social_github %}
+                                <a href="{{ profile.social_github }}" target="_blank" class="btn btn-outline-dark btn-sm me-2">
+                                    <i class="fab fa-github me-1"></i>GitHub
+                                </a>
+                            {% endif %}
+                            {% if profile.social_twitter %}
+                                <a href="{{ profile.social_twitter }}" target="_blank" class="btn btn-outline-info btn-sm me-2">
+                                    <i class="fab fa-twitter me-1"></i>Twitter
+                                </a>
+                            {% endif %}
+                            {% if profile.social_linkedin %}
+                                <a href="{{ profile.social_linkedin }}" target="_blank" class="btn btn-outline-primary btn-sm me-2">
+                                    <i class="fab fa-linkedin me-1"></i>LinkedIn
+                                </a>
+                            {% endif %}
+                            {% if profile.social_instagram %}
+                                <a href="{{ profile.social_instagram }}" target="_blank" class="btn btn-outline-danger btn-sm">
+                                    <i class="fab fa-instagram me-1"></i>Instagram
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Posts -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Recent Posts by {{ profile_user.username }}</h5>
+                </div>
+                <div class="card-body">
+                    {% for post in posts %}
+                        <div class="post-item mb-4">
+                            <h4><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h4>
+                            <div class="post-meta mb-2">
+                                <span><i class="far fa-calendar-alt me-1"></i>{{ post.published_at|date:"M d, Y" }}</span>
+                                <span class="ms-3"><i class="far fa-eye me-1"></i>{{ post.views }} views</span>
+                                <span class="ms-3"><i class="far fa-comment me-1"></i>{{ post.comments.count }} comments</span>
+                            </div>
+                            <p>{{ post.content|truncatewords:30 }}</p>
+                            <div class="post-tags mb-2">
+                                {% for tag in post.tags.all %}
+                                    <a href="{% url 'blog:tagged_posts' tag.slug %}" class="tag-badge">
+                                        <i class="fas fa-tag me-1"></i>{{ tag.name }}
+                                    </a>
+                                {% endfor %}
+                            </div>
+                            <a href="{{ post.get_absolute_url }}" class="btn btn-sm btn-outline-primary">Read More</a>
+                        </div>
+                        {% if not forloop.last %}<hr>{% endif %}
+                    {% empty %}
+                        <div class="alert alert-info">
+                            {{ profile_user.username }} hasn't published any posts yet.
+                        </div>
+                    {% endfor %}
+                    
+                    {% if posts.count > 5 %}
+                        <div class="text-center mt-4">
+                            <a href="{% url 'blog:author_posts' profile_user.username %}" class="btn btn-primary">
+                                View All Posts by {{ profile_user.username }}
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

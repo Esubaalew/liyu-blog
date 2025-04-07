@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ gallery.title }} - {{ site_title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'blog:gallery_list' %}">Galleries</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ gallery.title }}</li>
+                </ol>
+            </nav>
+            
+            <div class="gallery-header mb-4">
+                <h1 class="display-5 fw-bold">{{ gallery.title }}</h1>
+                <p class="lead">{{ gallery.description }}</p>
+                <div class="gallery-meta text-muted mb-4">
+                    <span><i class="far fa-calendar-alt me-1"></i>Created on {{ gallery.created_at|date:"F d, Y" }}</span>
+                    <span class="ms-3"><i class="far fa-images me-1"></i>{{ gallery.items.count }} items</span>
+                </div>
+            </div>
+            
+            <div class="gallery-content">
+                <div class="row">
+                    {% for item in gallery.items.all %}
+                        <div class="col-md-4 col-sm-6 mb-4">
+                            <div class="gallery-item-card animate-on-scroll">
+                                {% if item.media_type == 'image' %}
+                                    <a href="{{ item.file.url }}" data-lightbox="gallery" data-title="{{ item.title }}">
+                                        <div class="gallery-item">
+                                            <img src="{{ item.file.url }}" alt="{{ item.title }}">
+                                            <div class="gallery-item-overlay">
+                                                <h5>{{ item.title }}</h5>
+                                                {% if item.description %}
+                                                    <p class="small">{{ item.description }}</p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </a>
+                                {% elif item.media_type == 'video' %}
+                                    <div class="gallery-item">
+                                        <video controls class="w-100 rounded">
+                                            <source src="{{ item.file.url }}" type="video/mp4">
+                                            Your browser does not support the video tag.
+                                        </video>
+                                        <div class="mt-2">
+                                            <h5>{{ item.title }}</h5>
+                                            {% if item.description %}
+                                                <p class="small">{{ item.description }}</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% elif item.media_type == 'audio' %}
+                                    <div class="gallery-item">
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <h5 class="card-title">{{ item.title }}</h5>
+                                                {% if item.description %}
+                                                    <p class="card-text small">{{ item.description }}</p>
+                                                {% endif %}
+                                                <audio controls class="w-100 mt-2">
+                                                    <source src="{{ item.file.url }}" type="audio/mpeg">
+                                                    Your browser does not support the audio element.
+                                                </audio>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                No media items in this gallery yet.
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="gallery-footer mt-4">
+                <a href="{% url 'blog:gallery_list' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Galleries
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css">
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize lightbox
+        lightbox.option({
+            'resizeDuration': 200,
+            'wrapAround': true,
+            'albumLabel': 'Image %1 of %2'
+        });
+    });
+</script>
+{% endblock %}
